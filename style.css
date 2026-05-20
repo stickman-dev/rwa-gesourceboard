@@ -1,0 +1,34 @@
+.widget-rwa-gesourceboard .ges-simple h2 {
+    margin-top: 20px;
+    margin-bottom: 10px;
+}
+
+.widget-rwa-gesourceboard .input-group {
+    margin-bottom: 10px;
+}
+
+.widget-rwa-gesourceboard .btn-group-wrap {
+    margin-bottom: 15px;
+}
+
+.widget-rwa-gesourceboard .btn-group-wrap .btn {
+    margin-right: 5px;
+    margin-bottom: 5px;
+}
+
+.widget-rwa-gesourceboard .ges-output {
+    min-height: 120px;
+    max-height: 400px;
+    overflow: auto;
+    white-space: pre-wrap;
+    word-wrap: break-word;
+    padding: 10px;
+    border-radius: 4px;
+    background: rgba(0, 0, 0, 0.25);
+    color: #ddd;
+    font-size: 12px;
+}
+
+.widget-rwa-gesourceboard .welcome-message {
+    margin-bottom: 15px;
+}
