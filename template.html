@@ -1,0 +1,43 @@
+<div class="ges-simple">
+    <div class="welcome-message alert alert-info dismissable" data-id="gesourceboard.simple.welcome">
+        GE:Source quick controls: run RCON commands, change maps, and load server configs.
+    </div>
+
+    <h2 data-translate="commands.title"></h2>
+
+    <div class="cmd form-group has-feedback input-group">
+        <span class="input-group-addon">
+            <i class="glyphicon glyphicon-chevron-right"></i>
+        </span>
+        <input type="search" class="form-control ges-command-input" data-translate-property="placeholder,input.cmd">
+        <span class="input-group-addon btn btn-primary ges-command-send" data-translate="cmd.raw"></span>
+    </div>
+
+    <h2 data-translate="maps.title"></h2>
+
+    <div class="form-group has-feedback input-group">
+        <span class="input-group-addon">
+            <i class="glyphicon glyphicon-picture"></i>
+        </span>
+        <input type="text" class="form-control ges-map-input" placeholder="ge_complex">
+        <span class="input-group-addon btn btn-primary ges-map-change" data-translate="cmd.changelevel"></span>
+    </div>
+
+    <div class="ges-quick-maps btn-group-wrap"></div>
+
+    <h2 data-translate="configs.title"></h2>
+
+    <div class="form-group has-feedback input-group">
+        <span class="input-group-addon">
+            <i class="glyphicon glyphicon-cog"></i>
+        </span>
+        <input type="text" class="form-control ges-config-input" placeholder="server_normal.cfg">
+        <span class="input-group-addon btn btn-primary ges-config-exec" data-translate="cmd.exec"></span>
+    </div>
+
+    <div class="ges-quick-configs btn-group-wrap"></div>
+
+    <h2 data-translate="output.title"></h2>
+
+    <pre class="ges-output"></pre>
+</div>
