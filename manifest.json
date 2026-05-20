@@ -1,0 +1,38 @@
+{
+  "id": "rwa-gesourceboard",
+  "repository": "stickman-dev/rwa-gesourceboard",
+  "version": "0.1.0",
+  "compatibleGames": "all",
+  "compatibleSizes": [
+    "large",
+    "medium"
+  ],
+  "options": {
+    "quickMaps": {
+      "type": "text",
+      "default": "ge_archives_classic,ge_bunker_classic,ge_complex_classic,ge_library_classic,ge_stack_classic,ge_temple_classic,ge_facility_classic,ge_basement_classic"
+    },
+    "quickConfigs": {
+      "type": "text",
+      "default": "server_n64_classic.cfg,server_normal.cfg,server_dm_only.cfg,server_teamplay.cfg"
+    }
+  },
+  "locale": {
+    "en": {
+      "name": "GE:Sourceboard",
+      "description": "Simple GoldenEye: Source RCON controls",
+      "input.cmd": "Execute a RCON command, press Enter",
+      "cmd.raw": "Run command",
+      "cmd.changelevel": "Change map",
+      "cmd.exec": "Load config",
+      "maps.title": "Maps",
+      "configs.title": "Server configs",
+      "commands.title": "Command",
+      "output.title": "Output",
+      "option.quickMaps.title": "Quick maps",
+      "option.quickMaps.info": "Comma-separated map names, without .bsp",
+      "option.quickConfigs.title": "Quick config files",
+      "option.quickConfigs.info": "Comma-separated cfg files"
+    }
+  }
+}
