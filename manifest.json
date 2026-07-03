@@ -20,20 +20,20 @@
   "locale": {
     "en": {
       "name": "GE:Sourceboard",
-      "description": "Simple GoldenEye: Source RCON controls",
+      "description": "Quick administration controls for GoldenEye: Source servers.",
       "input.cmd": "Execute a RCON command, press Enter",
-      "cmd.raw": "Run command",
+      "cmd.raw": "Run RCON command",
       "cmd.changelevel": "Change map",
       "cmd.exec": "Load config",
       "maps.title": "Maps",
-      "configs.title": "Server configs",
-      "commands.title": "Command",
+      "configs.title": "Server Presets",
+      "commands.title": "RCON Command",
       "serverstatus": "Server Status",
-      "output.title": "Output",
+      "output.title": "RCON Console",
       "option.quickMaps.title": "Quick maps",
       "option.quickMaps.info": "Comma-separated map names, without .bsp",
-      "option.quickConfigs.title": "Quick config files",
-      "option.quickConfigs.info": "Comma-separated cfg files"
+      "option.quickConfigs.title": "Quick server presets",
+      "option.quickConfigs.info": "Comma-separated cfg files used as server presets"
     }
   }
 }
