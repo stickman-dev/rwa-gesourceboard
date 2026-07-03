@@ -27,7 +27,7 @@ Widget.register("rwa-gesourceboard", function (widget) {
         if (!players || !players.length) {
             tbody.append(
                 $("<tr>").append(
-                    $("<td colspan='5' class='text-muted'>").text("No players connected.")
+                    $("<td colspan='6' class='text-muted'>").text("No players connected.")
                 )
             );
             return;
@@ -41,6 +41,14 @@ Widget.register("rwa-gesourceboard", function (widget) {
             row.append($("<td>").text(player.connected));
             row.append($("<td>").text(player.ping));
             row.append($("<td>").text(player.state));
+            row.append(
+                $("<td>").append(
+                    $("<span class='btn btn-warning btn-xs ges-player-kick'>")
+                        .attr("data-userid", player.userid)
+                        .attr("data-name", player.name)
+                        .text("Kick")
+                )
+            );
 
             tbody.append(row);
         });
@@ -140,6 +148,23 @@ Widget.register("rwa-gesourceboard", function (widget) {
 
         widget.content.on("click", ".ges-status-refresh", function () {
             refreshStatus();
+        });
+
+        widget.content.on("click", ".ges-player-kick", function () {
+            var button = $(this);
+            var userid = button.attr("data-userid");
+            var name = button.attr("data-name");
+
+            if (!userid) return;
+
+            Modal.confirm("Kick " + name + " from the server?", function (success) {
+                if (success) {
+                    runBackend("kickPlayer", { userid: userid }, "Kicked " + name);
+                    setTimeout(function () {
+                        refreshStatus();
+                    }, 1000);
+                }
+            });
         });
 
         widget.content.on("click", ".ges-command-send", function () {

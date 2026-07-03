@@ -32,6 +32,10 @@ widget.onFrontendMessage = function (server, user, action, messageData, callback
             widget.runCommand(server, "exec " + cleanToken(messageData.config), callback);
             break;
 
+        case "kickPlayer":
+            widget.runCommand(server, "kickid " + cleanNumber(messageData.userid), callback);
+            break;
+
         default:
             callback(widget, {
                 ok: false,
@@ -218,6 +222,15 @@ function cleanToken(value) {
     return String(value || "")
         .trim()
         .replace(/[^a-zA-Z0-9_\-.]/g, "");
+}
+
+/**
+ * Clean numeric values such as Source userid values.
+ */
+function cleanNumber(value) {
+    return String(value || "")
+        .trim()
+        .replace(/[^0-9]/g, "");
 }
 
 module.exports = widget;
