@@ -28,6 +28,7 @@
       "maps.title": "Maps",
       "configs.title": "Server configs",
       "commands.title": "Command",
+      "serverstatus": "Server Status",
       "output.title": "Output",
       "option.quickMaps.title": "Quick maps",
       "option.quickMaps.info": "Comma-separated map names, without .bsp",

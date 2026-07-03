@@ -16,6 +16,10 @@ widget.onFrontendMessage = function (server, user, action, messageData, callback
     messageData = messageData || {};
 
     switch (action) {
+        case "status":
+            widget.getStatus(server, callback);
+            break;
+
         case "command":
             widget.runCommand(server, messageData.command, callback);
             break;
@@ -90,6 +94,121 @@ widget.runCommand = function (server, command, callback) {
 
     runNext();
 };
+
+/**
+ * Get and parse Source server status.
+ *
+ * @param {RconServer} server
+ * @param {function} callback
+ */
+widget.getStatus = function (server, callback) {
+    server.cmd("status", null, false, function (response) {
+        response = response || "";
+
+        callback(widget, {
+            ok: true,
+            raw: response,
+            server: parseStatus(response),
+            players: parsePlayers(response)
+        });
+    });
+};
+
+/**
+ * Parse Source engine `status` output into useful fields.
+ *
+ * @param {string} statusData
+ * @return {object}
+ */
+function parseStatus(statusData) {
+    var server = {
+        hostname: "",
+        version: "",
+        map: "",
+        players: ""
+    };
+
+    var lines = String(statusData || "").split(/\r?\n/);
+
+    for (var i = 0; i < lines.length; i++) {
+        var line = lines[i];
+        var match = line.match(/^\s*([^:]+)\s*:\s*(.*?)\s*$/);
+
+        if (!match) continue;
+
+        var key = match[1]
+            .replace(/[\x00-\x1F\x7F]/g, "")
+            .trim()
+            .toLowerCase();
+        var value = match[2].trim();
+
+        if (key === "hostname") server.hostname = value;
+        if (key === "version") server.version = value;
+        if (key === "map") server.map = value.split(" at:")[0].trim();
+        if (key === "players") server.players = value;
+    }
+
+    return server;
+}
+
+/**
+ * Parse player rows from Source engine `status` output.
+ *
+ * @param {string} statusData
+ * @return {object[]}
+ */
+function parsePlayers(statusData) {
+    var players = [];
+    var lines = String(statusData || "").split(/\r?\n/);
+    var inPlayerTable = false;
+
+    for (var i = 0; i < lines.length; i++) {
+        var line = lines[i];
+
+        if (line.match(/^#\s+userid\s+name\s+uniqueid\s+connected\s+ping\s+loss\s+state/i)) {
+            inPlayerTable = true;
+            continue;
+        }
+
+        if (!inPlayerTable) continue;
+        if (!line.trim()) continue;
+        if (!line.match(/^#\s+\d+/)) continue;
+
+        var player = parsePlayerLine(line);
+
+        if (player) {
+            players.push(player);
+        }
+    }
+
+    return players;
+}
+
+/**
+ * Parse one Source engine `status` player row.
+ *
+ * Example:
+ * #  2 "Stickman" STEAM_0:0:5064618 06:09 38 0 active 172.18.0.6:37291
+ *
+ * @param {string} line
+ * @return {object|null}
+ */
+function parsePlayerLine(line) {
+    var match = line.match(/^#\s+(\d+)\s+"([^"]+)"\s+(\S+)\s+(\S+)\s+(\d+)\s+(\d+)\s+(\S+)\s*(.*)$/);
+
+    if (!match) return null;
+
+    return {
+        userid: parseInt(match[1], 10),
+        name: match[2],
+        steamid: match[3],
+        connected: match[4],
+        ping: parseInt(match[5], 10),
+        loss: parseInt(match[6], 10),
+        state: match[7],
+        address: match[8] || ""
+    };
+}
 
 /**
  * Clean map/config tokens.

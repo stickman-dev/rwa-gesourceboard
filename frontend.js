@@ -1,7 +1,7 @@
 "use strict";
 
 Widget.register("rwa-gesourceboard", function (widget) {
-    var simple = widget.template(".ges-simple");
+    var board = widget.template(".ges-board");
 
     var splitOption = function (value) {
         if (!value) return [];
@@ -17,7 +17,58 @@ Widget.register("rwa-gesourceboard", function (widget) {
     };
 
     var writeOutput = function (text) {
-        simple.find(".ges-output").text(text || "");
+        board.find(".ges-output").text(text || "");
+    };
+
+    var renderPlayers = function (players) {
+        var tbody = board.find(".ges-player-table tbody");
+        tbody.html("");
+
+        if (!players || !players.length) {
+            tbody.append(
+                $("<tr>").append(
+                    $("<td colspan='5' class='text-muted'>").text("No players connected.")
+                )
+            );
+            return;
+        }
+
+        players.forEach(function (player) {
+            var row = $("<tr>");
+
+            row.append($("<td>").text(player.userid));
+            row.append($("<td>").text(player.name));
+            row.append($("<td>").text(player.connected));
+            row.append($("<td>").text(player.ping));
+            row.append($("<td>").text(player.state));
+
+            tbody.append(row);
+        });
+    };
+
+    var refreshStatus = function () {
+        widget.backend("status", {}, function (response) {
+            if (!response) {
+                writeOutput("No response from status request");
+                return;
+            }
+
+            if (response.error) {
+                writeOutput(response.error);
+                note(response.error, "danger");
+                return;
+            }
+
+            var server = response.server || {};
+
+            board.find(".ges-status-hostname").text(server.hostname || "Unknown");
+            board.find(".ges-status-map").text(server.map || "Unknown");
+            board.find(".ges-status-players").text(server.players || "Unknown");
+            board.find(".ges-status-version").text(server.version || "Unknown");
+
+            renderPlayers(response.players || []);
+            writeOutput(response.raw || "");
+        });
     };
 
     var runBackend = function (action, data, successMessage) {
@@ -52,7 +103,7 @@ Widget.register("rwa-gesourceboard", function (widget) {
     };
 
     var renderQuickMaps = function () {
-        var wrap = simple.find(".ges-quick-maps");
+        var wrap = board.find(".ges-quick-maps");
         wrap.html("");
 
         splitOption(widget.options.get("quickMaps")).forEach(function (map) {
@@ -66,7 +117,7 @@ Widget.register("rwa-gesourceboard", function (widget) {
     };
 
     var renderQuickConfigs = function () {
-        var wrap = simple.find(".ges-quick-configs");
+        var wrap = board.find(".ges-quick-configs");
         wrap.html("");
 
         splitOption(widget.options.get("quickConfigs")).forEach(function (cfg) {
@@ -80,13 +131,19 @@ Widget.register("rwa-gesourceboard", function (widget) {
     };
 
     widget.onInit = function () {
-        widget.content.append(simple);
+        widget.content.append(board);
 
         renderQuickMaps();
         renderQuickConfigs();
 
+        refreshStatus();
+
+        widget.content.on("click", ".ges-status-refresh", function () {
+            refreshStatus();
+        });
+
         widget.content.on("click", ".ges-command-send", function () {
-            var input = simple.find(".ges-command-input");
+            var input = board.find(".ges-command-input");
             var command = input.val();
 
             if (!command) return;
@@ -97,7 +154,7 @@ Widget.register("rwa-gesourceboard", function (widget) {
 
         widget.content.on("keyup", ".ges-command-input", function (ev) {
             if (ev.keyCode === 13) {
-                simple.find(".ges-command-send").click();
+                board.find(".ges-command-send").click();
             }
 
             if (ev.keyCode === 27) {
@@ -106,7 +163,7 @@ Widget.register("rwa-gesourceboard", function (widget) {
         });
 
         widget.content.on("click", ".ges-map-change", function () {
-            var input = simple.find(".ges-map-input");
+            var input = board.find(".ges-map-input");
             var map = input.val();
 
             if (!map) return;
@@ -120,7 +177,7 @@ Widget.register("rwa-gesourceboard", function (widget) {
 
         widget.content.on("keyup", ".ges-map-input", function (ev) {
             if (ev.keyCode === 13) {
-                simple.find(".ges-map-change").click();
+                board.find(".ges-map-change").click();
             }
 
             if (ev.keyCode === 27) {
@@ -139,7 +196,7 @@ Widget.register("rwa-gesourceboard", function (widget) {
         });
 
         widget.content.on("click", ".ges-config-exec", function () {
-            var input = simple.find(".ges-config-input");
+            var input = board.find(".ges-config-input");
             var cfg = input.val();
 
             if (!cfg) return;
@@ -149,7 +206,7 @@ Widget.register("rwa-gesourceboard", function (widget) {
 
         widget.content.on("keyup", ".ges-config-input", function (ev) {
             if (ev.keyCode === 13) {
-                simple.find(".ges-config-exec").click();
+                board.find(".ges-config-exec").click();
             }
 
             if (ev.keyCode === 27) {
