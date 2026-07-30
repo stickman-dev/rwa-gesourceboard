@@ -36,6 +36,10 @@ widget.onFrontendMessage = function (server, user, action, messageData, callback
             widget.runCommand(server, "kickid " + cleanNumber(messageData.userid), callback);
             break;
 
+        case "banPlayer":
+            widget.runCommand(server, "banid 0 " + cleanNumber(messageData.userid) + " kick; writeid", callback);
+            break;
+
         default:
             callback(widget, {
                 ok: false,

@@ -20,6 +20,89 @@ Widget.register("rwa-gesourceboard", function (widget) {
         board.find(".ges-output").text(text || "");
     };
 
+    var steamIdToSteam64 = function (steamid) {
+        var match = String(steamid || "").match(/^STEAM_[0-5]:([01]):(\d+)$/);
+
+        if (!match) return null;
+
+        try {
+            var y = BigInt(match[1]);
+            var z = BigInt(match[2]);
+            var base = BigInt("76561197960265728");
+
+            return (z * BigInt(2) + y + base).toString();
+        } catch (e) {
+            return null;
+        }
+    };
+
+    var copyToClipboard = function (text) {
+        if (navigator.clipboard && navigator.clipboard.writeText) {
+            navigator.clipboard.writeText(text);
+            return;
+        }
+
+        var temp = $("<textarea readonly>")
+            .css({ position: "fixed", top: "-1000px" })
+            .val(text);
+
+        $("body").append(temp);
+        temp[0].select();
+        document.execCommand("copy");
+        temp.remove();
+    };
+
+    var renderPlayerActions = function (player) {
+        var group = $("<div class='btn-group ges-player-actions'>");
+
+        var toggle = $("<span class='btn btn-default btn-xs dropdown-toggle' data-toggle='dropdown'>")
+            .append("Actions ")
+            .append($("<span class='caret'>"));
+
+        var menu = $("<ul class='dropdown-menu dropdown-menu-right'>");
+
+        menu.append(
+            $("<li>").append(
+                $("<a href='#' class='ges-player-kick'>")
+                    .attr("data-userid", player.userid)
+                    .attr("data-name", player.name)
+                    .text("Kick")
+            )
+        );
+
+        menu.append(
+            $("<li>").append(
+                $("<a href='#' class='ges-player-ban'>")
+                    .attr("data-userid", player.userid)
+                    .attr("data-name", player.name)
+                    .text("Ban")
+            )
+        );
+
+        menu.append($("<li role='separator' class='divider'>"));
+
+        menu.append(
+            $("<li>").append(
+                $("<a href='#' class='ges-player-copy-steamid'>")
+                    .attr("data-steamid", player.steamid)
+                    .text("Copy SteamID")
+            )
+        );
+
+        menu.append(
+            $("<li>").append(
+                $("<a href='#' class='ges-player-steam-profile'>")
+                    .attr("data-steamid", player.steamid)
+                    .text("Open Steam Profile")
+            )
+        );
+
+        group.append(toggle);
+        group.append(menu);
+
+        return group;
+    };
+
     var renderPlayers = function (players) {
         var tbody = board.find(".ges-player-table tbody");
         tbody.html("");
@@ -42,12 +125,7 @@ Widget.register("rwa-gesourceboard", function (widget) {
             row.append($("<td>").text(player.ping));
             row.append($("<td>").text(player.state));
             row.append(
-                $("<td>").append(
-                    $("<span class='btn btn-warning btn-xs ges-player-kick'>")
-                        .attr("data-userid", player.userid)
-                        .attr("data-name", player.name)
-                        .text("Kick")
-                )
+                $("<td>").append(renderPlayerActions(player))
             );
 
             tbody.append(row);
@@ -150,7 +228,9 @@ Widget.register("rwa-gesourceboard", function (widget) {
             refreshStatus();
         });
 
-        widget.content.on("click", ".ges-player-kick", function () {
+        widget.content.on("click", ".ges-player-kick", function (ev) {
+            ev.preventDefault();
+
             var button = $(this);
             var userid = button.attr("data-userid");
             var name = button.attr("data-name");
@@ -165,6 +245,50 @@ Widget.register("rwa-gesourceboard", function (widget) {
                     }, 1000);
                 }
             });
+        });
+
+        widget.content.on("click", ".ges-player-ban", function (ev) {
+            ev.preventDefault();
+
+            var button = $(this);
+            var userid = button.attr("data-userid");
+            var name = button.attr("data-name");
+
+            if (!userid) return;
+
+            Modal.confirm("Ban " + name + " from the server? This cannot be undone from here.", function (success) {
+                if (success) {
+                    runBackend("banPlayer", { userid: userid }, "Banned " + name);
+                    setTimeout(function () {
+                        refreshStatus();
+                    }, 1000);
+                }
+            });
+        });
+
+        widget.content.on("click", ".ges-player-copy-steamid", function (ev) {
+            ev.preventDefault();
+
+            var steamid = $(this).attr("data-steamid");
+
+            if (!steamid) return;
+
+            copyToClipboard(steamid);
+            note("Copied " + steamid, "success");
+        });
+
+        widget.content.on("click", ".ges-player-steam-profile", function (ev) {
+            ev.preventDefault();
+
+            var steamid = $(this).attr("data-steamid");
+            var steam64 = steamIdToSteam64(steamid);
+
+            if (!steam64) {
+                note("Could not resolve SteamID for this player", "danger");
+                return;
+            }
+
+            window.open("https://steamcommunity.com/profiles/" + steam64, "_blank");
         });
 
         widget.content.on("click", ".ges-command-send", function () {

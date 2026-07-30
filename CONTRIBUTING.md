@@ -43,7 +43,7 @@ Naming Conventions
 * Main container: ges-board
 * Backend helpers: widget.getStatus(), parseStatus(), parsePlayers()
 * Frontend helpers: refreshStatus(), renderPlayers(), renderQuickMaps()
-* Backend actions: status, command, changelevel, execConfig, kickPlayer
+* Backend actions: status, command, changelevel, execConfig, kickPlayer, banPlayer
 
 Current Features
 
@@ -52,13 +52,11 @@ Current Features
 * Quick server preset/config loading
 * Server status display
 * Live player list
-* Kick player action
+* Player action menu (kick, ban, copy SteamID, open Steam profile)
 * RCON command output panel
 
 Planned Features
 
-* Player action menu
-* Ban player action
 * Friendly preset labels
 * Gameplay controls
 * Radar toggles
