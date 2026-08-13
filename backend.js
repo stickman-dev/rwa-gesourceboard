@@ -36,6 +36,18 @@ widget.onFrontendMessage = function (server, user, action, messageData, callback
             widget.runCommand(server, "kickid " + cleanNumber(messageData.userid), callback);
             break;
 
+        case "banPlayer":
+            widget.banPlayer(server, messageData.steamid, messageData.minutes, callback);
+            break;
+
+        case "bans":
+            widget.getBans(server, callback);
+            break;
+
+        case "unbanPlayer":
+            widget.unbanPlayer(server, messageData.steamid, callback);
+            break;
+
         default:
             callback(widget, {
                 ok: false,
@@ -116,6 +128,83 @@ widget.getStatus = function (server, callback) {
             players: parsePlayers(response)
         });
     });
+};
+
+/**
+ * Ban a player by Steam2 ID.
+ * A duration of 0 is permanent; positive values are minutes.
+ *
+ * @param {RconServer} server
+ * @param {string} steamid
+ * @param {number|string} minutes
+ * @param {function} callback
+ */
+widget.banPlayer = function (server, steamid, minutes, callback) {
+    steamid = cleanSteamId(steamid);
+    minutes = parseInt(cleanNumber(minutes), 10);
+
+    if (!steamid) {
+        callback(widget, {
+            ok: false,
+            error: "Invalid SteamID"
+        });
+        return;
+    }
+
+    if (isNaN(minutes) || minutes < 0) {
+        callback(widget, {
+            ok: false,
+            error: "Invalid ban duration"
+        });
+        return;
+    }
+
+    var command = "banid " + minutes + " " + steamid + " kick";
+
+    if (minutes === 0) {
+        command += "; writeid";
+    }
+
+    widget.runCommand(server, command, callback);
+};
+
+/**
+ * Return the server's SteamID ban list.
+ *
+ * @param {RconServer} server
+ * @param {function} callback
+ */
+widget.getBans = function (server, callback) {
+    server.cmd("listid", null, false, function (response) {
+        response = response || "";
+
+        callback(widget, {
+            ok: true,
+            raw: response,
+            bans: parseBans(response)
+        });
+    });
+};
+
+/**
+ * Remove a SteamID ban and persist the updated ban list.
+ *
+ * @param {RconServer} server
+ * @param {string} steamid
+ * @param {function} callback
+ */
+widget.unbanPlayer = function (server, steamid, callback) {
+    steamid = cleanSteamId(steamid);
+
+    if (!steamid) {
+        callback(widget, {
+            ok: false,
+            error: "Invalid SteamID"
+        });
+        return;
+    }
+
+    widget.runCommand(server, "removeid " + steamid + "; writeid", callback);
 };
 
 /**
@@ -215,6 +304,45 @@ function parsePlayerLine(line) {
 }
 
 /**
+ * Parse Source engine `listid` output.
+ * The exact spacing varies between Source games, so each row is identified by
+ * its Steam2 ID and the remaining text is treated as the duration.
+ *
+ * @param {string} bansData
+ * @return {object[]}
+ */
+function parseBans(bansData) {
+    var bans = [];
+    var lines = String(bansData || "")
+        .replace(/[\x00-\x09\x0B\x0C\x0E-\x1F\x7F]/g, "")
+        .split(/\r?\n/);
+
+    for (var i = 0; i < lines.length; i++) {
+        var line = lines[i].trim();
+        var idMatch = line.match(/STEAM_[0-5]:[01]:\d+/i);
+
+        if (!idMatch) continue;
+
+        var steamid = idMatch[0].toUpperCase();
+        var duration = line.slice(idMatch.index + idMatch[0].length)
+            .replace(/^\s*[:=-]?\s*/, "")
+            .trim();
+        var numberMatch = duration.match(/\d+(?:\.\d+)?/);
+        var minutes = numberMatch ? parseFloat(numberMatch[0]) : null;
+        var permanent = /permanent/i.test(duration) || minutes === 0;
+
+        bans.push({
+            steamid: steamid,
+            permanent: permanent,
+            minutes: permanent ? 0 : minutes,
+            duration: permanent ? "Permanent" : (duration || "Unknown")
+        });
+    }
+
+    return bans;
+}
+
+/**
  * Clean map/config tokens.
  * Allows common Source cfg/map filename characters only.
  */
@@ -228,9 +356,22 @@ function cleanToken(value) {
  * Clean numeric values such as Source userid values.
  */
 function cleanNumber(value) {
-    return String(value || "")
+    return String(value === null || typeof value === "undefined" ? "" : value)
         .trim()
         .replace(/[^0-9]/g, "");
+}
+
+/**
+ * Validate and normalize a Source Steam2 ID.
+ */
+function cleanSteamId(value) {
+    var steamid = String(value || "").trim().toUpperCase();
+
+    if (!steamid.match(/^STEAM_[0-5]:[01]:\d+$/)) {
+        return "";
+    }
+
+    return steamid;
 }
 
 module.exports = widget;

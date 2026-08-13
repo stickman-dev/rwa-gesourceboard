@@ -18,7 +18,7 @@ Current features include:
 
 - Server status
 - Live player list
-- Kick players
+- Player actions menu (kick, ban, copy SteamID, open Steam profile)
 - Execute raw RCON commands
 - Quick map switching
 - Quick server preset loading
@@ -28,7 +28,6 @@ Current features include:
 
 A few things I'd like to add over time:
 
-- More player actions
 - Gameplay controls (radar, teamplay, etc.)
 - Better server status information
 - Friendlier server preset names
