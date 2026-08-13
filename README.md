@@ -45,6 +45,12 @@ https://github.com/stickman-dev/rwa-gesourceboard
 
 The widget will then be available to add to your dashboard.
 
+### Manual installation
+
+I had some issues with RCON Web Admin's built-in widget installer with my particular install. If you're also having issues, just clone or copy this repository into RCON Web Admin's `widgets` folder and restart RCON Web Admin.
+
+If running RCON Web Admin in Docker, mount a host directory as the container's `widgets` folder and copy or clone the repo there.
+
 ### Persistent bans
 
 To reload permanent bans after the game server restarts, add the following line to `gesource/cfg/server.cfg`:
