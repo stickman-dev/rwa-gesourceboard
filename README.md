@@ -43,6 +43,16 @@ https://github.com/stickman-dev/rwa-gesourceboard
 
 The widget will then be available to add to your dashboard.
 
+### Persistent bans
+
+To reload permanent bans after the game server restarts, add the following line to `gesource/cfg/server.cfg`:
+
+```text
+exec banned_user.cfg
+```
+
+The `banned_user.cfg` file is created or updated when GE:Sourceboard saves a permanent ban. Make sure the `gesource/cfg` directory is stored in persistent container storage.
+
 ## License
 
 MIT
