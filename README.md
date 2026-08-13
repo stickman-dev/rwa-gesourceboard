@@ -12,6 +12,10 @@ A Docker image is also available:
 
 - https://github.com/itzg/docker-rcon-web-admin
 
+And you can find the excellent GoldenEye: Source here:
+
+- https://www.geshl2.com/
+
 ## Features
 
 Current features include:
