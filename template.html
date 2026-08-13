@@ -78,17 +78,115 @@
         </tbody>
     </table>
 
-    <h2 data-translate="commands.title"></h2>
+    <h2>Gameplay Controls</h2>
 
-    <div class="cmd form-group has-feedback input-group">
-        <span class="input-group-addon">
-            <i class="glyphicon glyphicon-chevron-right"></i>
-        </span>
-        <input type="search" class="form-control ges-command-input" data-translate-property="placeholder,input.cmd">
-        <span class="input-group-addon btn btn-primary ges-command-send" data-translate="cmd.raw"></span>
+    <div class="ges-gameplay-panel">
+        <div class="alert alert-info ges-gameplay-note" role="alert">
+            Apply gameplay controls after changing the map or gameplay mode, as their configuration files may override these values.
+        </div>
+
+        <div class="ges-gameplay-row">
+            <div class="ges-gameplay-label">
+                <strong>Teamplay</strong>
+                <span class="text-muted">Use map rules, or force teamplay on or off.</span>
+            </div>
+            <div class="ges-gameplay-teamplay input-group input-group-sm">
+                <select class="form-control ges-teamplay-mode">
+                    <option value="automatic">Automatic</option>
+                    <option value="on">On</option>
+                    <option value="off">Off</option>
+                </select>
+                <span class="input-group-btn">
+                    <button type="button" class="btn btn-default ges-gameplay-apply">Apply</button>
+                </span>
+            </div>
+        </div>
+
+        <div class="ges-gameplay-row">
+            <div class="ges-gameplay-label">
+                <strong>Radar</strong>
+                <span class="text-muted">Allow players to use radar.</span>
+            </div>
+            <button type="button" class="btn btn-default btn-sm ges-gameplay-toggle" data-control="radar" data-label="Radar" data-value="0">Off</button>
+        </div>
+
+        <div class="ges-gameplay-row">
+            <div class="ges-gameplay-label">
+                <strong>Show enemies on radar</strong>
+                <span class="text-muted">Show opposing players during teamplay.</span>
+            </div>
+            <button type="button" class="btn btn-default btn-sm ges-gameplay-toggle" data-control="enemyRadar" data-label="Enemy radar" data-value="0">Off</button>
+        </div>
+
+        <div class="ges-gameplay-row">
+            <div class="ges-gameplay-label">
+                <strong>Paintball</strong>
+                <span class="text-muted">Enable coloured bullet decals.</span>
+            </div>
+            <button type="button" class="btn btn-default btn-sm ges-gameplay-toggle" data-control="paintball" data-label="Paintball" data-value="0">Off</button>
+        </div>
+
+        <div class="ges-gameplay-row">
+            <div class="ges-gameplay-label">
+                <strong>Jumping</strong>
+                <span class="text-muted">Allow players to jump.</span>
+            </div>
+            <button type="button" class="btn btn-default btn-sm ges-gameplay-toggle" data-control="jumping" data-label="Jumping" data-value="0">Off</button>
+        </div>
+
+        <div class="ges-gameplay-row">
+            <div class="ges-gameplay-label">
+                <strong>Start armed</strong>
+                <span class="text-muted">Spawn with the first weapon in the current weapon set instead of only Slappers.</span>
+            </div>
+            <button type="button" class="btn btn-default btn-sm ges-gameplay-toggle" data-control="startArmed" data-label="Start armed" data-value="0">Off</button>
+        </div>
+
+        <div class="ges-gameplay-row">
+            <div class="ges-gameplay-label">
+                <strong>Match time</strong>
+                <span class="text-muted">Target time per map. A round already in progress is allowed to finish.</span>
+            </div>
+            <div class="ges-gameplay-number input-group input-group-sm">
+                <input type="number" min="0" step="1" class="form-control ges-gameplay-number-value" data-control="matchTime">
+                <span class="input-group-addon">min</span>
+            </div>
+        </div>
+
+        <div class="ges-gameplay-row">
+            <div class="ges-gameplay-label">
+                <strong>Round time</strong>
+                <span class="text-muted">Used when Round count is 0; otherwise GE:S calculates it automatically.</span>
+            </div>
+            <div class="ges-gameplay-number input-group input-group-sm">
+                <input type="number" min="0" step="1" class="form-control ges-gameplay-number-value" data-control="roundTime">
+                <span class="input-group-addon">sec</span>
+            </div>
+        </div>
+
+        <div class="ges-gameplay-row">
+            <div class="ges-gameplay-label">
+                <strong>Round count</strong>
+                <span class="text-muted">Rounds per match. Calculates round time from match time; 0 disables it.</span>
+            </div>
+            <div class="ges-gameplay-number input-group input-group-sm">
+                <input type="number" min="0" step="1" class="form-control ges-gameplay-number-value" data-control="roundCount">
+                <span class="input-group-addon">rounds</span>
+            </div>
+        </div>
+
+        <div class="ges-gameplay-actions">
+            <button type="button" class="btn btn-primary btn-sm ges-gameplay-timing-apply">Apply Timing</button>
+            <button type="button" class="btn btn-default btn-sm ges-gameplay-refresh">
+                <span class="glyphicon glyphicon-refresh"></span>
+                Refresh Controls
+            </button>
+        </div>
     </div>
 
     <h2 data-translate="maps.title"></h2>
+
+    <p class="text-muted">Run <code>maps *</code> in RCON to list all installed maps.</p>
 
     <div class="form-group has-feedback input-group">
         <span class="input-group-addon">
@@ -99,6 +197,34 @@
     </div>
 
     <div class="ges-quick-maps btn-group-wrap"></div>
+
+    <h2>Gameplay Modes</h2>
+
+    <p class="text-muted">Run <code>ge_gameplaylist</code> in RCON to list all available gameplay modes.</p>
+
+    <div class="form-group has-feedback input-group">
+        <span class="input-group-addon">
+            <i class="glyphicon glyphicon-tower"></i>
+        </span>
+        <input type="text" class="form-control ges-gameplay-mode-input" placeholder="deathmatch">
+        <span class="input-group-addon btn btn-primary ges-gameplay-mode-change">Change gameplay</span>
+    </div>
+
+    <div class="ges-quick-gameplays btn-group-wrap"></div>
+
+    <h2>Weapon Sets</h2>
+
+    <p class="text-muted">Run <code>ge_weaponset_list</code> in RCON to list all available weapon sets.</p>
+
+    <div class="form-group has-feedback input-group">
+        <span class="input-group-addon">
+            <i class="glyphicon glyphicon-wrench"></i>
+        </span>
+        <input type="text" class="form-control ges-weaponset-input" placeholder="assorted_weapons">
+        <span class="input-group-addon btn btn-primary ges-weaponset-change">Change weapon set</span>
+    </div>
+
+    <div class="ges-quick-weaponsets btn-group-wrap"></div>
 
     <h2 data-translate="configs.title"></h2>
 
@@ -111,6 +237,16 @@
     </div>
 
     <div class="ges-quick-configs btn-group-wrap"></div>
+
+    <h2 data-translate="commands.title"></h2>
+
+    <div class="cmd form-group has-feedback input-group">
+        <span class="input-group-addon">
+            <i class="glyphicon glyphicon-chevron-right"></i>
+        </span>
+        <input type="search" class="form-control ges-command-input" data-translate-property="placeholder,input.cmd">
+        <span class="input-group-addon btn btn-primary ges-command-send" data-translate="cmd.raw"></span>
+    </div>
 
     <h2 data-translate="output.title"></h2>
 

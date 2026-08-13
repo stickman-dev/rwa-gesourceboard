@@ -33,6 +33,66 @@
     margin-bottom: 15px;
 }
 
+.widget-rwa-gesourceboard .ges-gameplay-panel {
+    border: 1px solid rgba(127, 127, 127, 0.25);
+    border-radius: 4px;
+    padding: 10px 15px;
+}
+
+.widget-rwa-gesourceboard .ges-gameplay-row {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    gap: 15px;
+    padding: 8px 0;
+    border-bottom: 1px solid rgba(127, 127, 127, 0.15);
+}
+
+.widget-rwa-gesourceboard .ges-gameplay-label strong,
+.widget-rwa-gesourceboard .ges-gameplay-label span {
+    display: block;
+}
+
+.widget-rwa-gesourceboard .ges-gameplay-teamplay {
+    width: 190px;
+    margin-bottom: 0;
+}
+
+.widget-rwa-gesourceboard .ges-gameplay-number {
+    width: 220px;
+    margin-bottom: 0;
+}
+
+.widget-rwa-gesourceboard .ges-gameplay-note {
+    margin: 0 0 10px;
+    padding: 8px 12px;
+}
+
+.widget-rwa-gesourceboard .ges-gameplay-toggle {
+    min-width: 54px;
+}
+
+.widget-rwa-gesourceboard .ges-gameplay-actions {
+    padding-top: 10px;
+}
+
+.widget-rwa-gesourceboard .ges-gameplay-actions .btn {
+    margin-right: 5px;
+    margin-bottom: 5px;
+}
+
+@media (max-width: 600px) {
+    .widget-rwa-gesourceboard .ges-gameplay-row {
+        align-items: stretch;
+        flex-direction: column;
+    }
+
+    .widget-rwa-gesourceboard .ges-gameplay-teamplay,
+    .widget-rwa-gesourceboard .ges-gameplay-number {
+        width: 100%;
+    }
+}
+
 .widget-rwa-gesourceboard .ges-player-table td {
     vertical-align: middle;
 }

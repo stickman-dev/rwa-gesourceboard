@@ -226,6 +226,145 @@ Widget.register("rwa-gesourceboard", function (widget) {
         });
     };
 
+    var updateRoundTimeState = function () {
+        var roundCount = parseInt(board.find(".ges-gameplay-number-value[data-control='roundCount']").val(), 10);
+        var calculated = !isNaN(roundCount) && roundCount > 0;
+
+        board.find(".ges-gameplay-number-value[data-control='roundTime']")
+            .prop("disabled", calculated)
+            .attr("title", calculated ? "Calculated by GE:S from match time and round count" : "");
+    };
+
+    var setGameplayControlsLoading = function (loading) {
+        board.find(".ges-gameplay-refresh, .ges-gameplay-apply, .ges-gameplay-toggle, .ges-gameplay-timing-apply")
+            .toggleClass("disabled", loading)
+            .prop("disabled", loading);
+        board.find(".ges-teamplay-mode, .ges-gameplay-number-value").prop("disabled", loading);
+
+        if (!loading) {
+            updateRoundTimeState();
+        }
+    };
+
+    var renderGameplayControls = function (controls) {
+        controls = controls || {};
+
+        board.find(".ges-teamplay-mode").val(controls.teamplay || "off");
+
+        board.find(".ges-gameplay-number-value").each(function () {
+            var input = $(this);
+            var value = controls[input.attr("data-control")];
+
+            input.val(typeof value === "number" ? value : "");
+        });
+
+        updateRoundTimeState();
+
+        board.find(".ges-gameplay-toggle").each(function () {
+            var button = $(this);
+            var control = button.attr("data-control");
+            var enabled = controls[control] === true;
+
+            button
+                .attr("data-value", enabled ? "1" : "0")
+                .toggleClass("btn-success", enabled)
+                .toggleClass("btn-default", !enabled)
+                .text(enabled ? "On" : "Off");
+        });
+
+        var radarEnabled = controls.radar === true;
+        var enemyRadar = board.find(".ges-gameplay-toggle[data-control='enemyRadar']");
+
+        enemyRadar
+            .toggleClass("disabled", !radarEnabled)
+            .prop("disabled", !radarEnabled)
+            .attr("title", radarEnabled ? "" : "Enable Radar first");
+    };
+
+    var refreshGameplayControls = function () {
+        setGameplayControlsLoading(true);
+
+        widget.backend("gameplayControls", {}, function (response) {
+            setGameplayControlsLoading(false);
+
+            if (!response) {
+                writeOutput("No response from gameplay controls request");
+                return;
+            }
+
+            if (response.error) {
+                writeOutput(response.error);
+                note(response.error, "danger");
+                return;
+            }
+
+            renderGameplayControls(response.controls);
+        });
+    };
+
+    var updateGameplayControl = function (control, value, successMessage) {
+        setGameplayControlsLoading(true);
+
+        widget.backend("setGameplayControl", {
+            control: control,
+            value: value
+        }, function (response) {
+            if (!response || response.error) {
+                setGameplayControlsLoading(false);
+                var error = response && response.error ? response.error : "No response";
+
+                writeOutput(error);
+                note(error, "danger");
+                return;
+            }
+
+            if (successMessage) {
+                note(successMessage, "success");
+            }
+
+            setTimeout(function () {
+                refreshGameplayControls();
+            }, 300);
+        });
+    };
+
+    var applyGameplayTiming = function () {
+        var timing = {
+            matchTime: board.find(".ges-gameplay-number-value[data-control='matchTime']").val().trim(),
+            roundTime: board.find(".ges-gameplay-number-value[data-control='roundTime']").val().trim(),
+            roundCount: board.find(".ges-gameplay-number-value[data-control='roundCount']").val().trim()
+        };
+        var valid = /^\d+$/.test(timing.matchTime) && /^\d+$/.test(timing.roundCount);
+
+        if (valid && parseInt(timing.roundCount, 10) === 0) {
+            valid = /^\d+$/.test(timing.roundTime);
+        }
+
+        if (!valid) {
+            note("Timing values must be whole numbers of 0 or greater", "danger");
+            return;
+        }
+
+        setGameplayControlsLoading(true);
+
+        widget.backend("setGameplayTiming", timing, function (response) {
+            if (!response || response.error) {
+                setGameplayControlsLoading(false);
+                var error = response && response.error ? response.error : "No response";
+
+                writeOutput(error);
+                note(error, "danger");
+                return;
+            }
+
+            note("Timing applied", "success");
+
+            setTimeout(function () {
+                refreshGameplayControls();
+            }, 300);
+        });
+    };
+
     var runBackend = function (action, data, successMessage) {
         widget.backend(action, data || {}, function (response) {
             if (!response) {
@@ -285,17 +424,85 @@ Widget.register("rwa-gesourceboard", function (widget) {
         });
     };
 
+    var renderQuickWeaponSets = function () {
+        var wrap = board.find(".ges-quick-weaponsets");
+        wrap.html("");
+
+        splitOption(widget.options.get("quickWeaponSets")).forEach(function (weaponSet) {
+            wrap.append(
+                $("<span class='btn btn-default btn-sm ges-quick-weaponset'>")
+                    .attr("data-weaponset", weaponSet)
+                    .text(weaponSet)
+            );
+            wrap.append(" ");
+        });
+    };
+
+    var renderQuickGameplays = function () {
+        var wrap = board.find(".ges-quick-gameplays");
+        wrap.html("");
+
+        splitOption(widget.options.get("quickGameplays")).forEach(function (gameplay) {
+            wrap.append(
+                $("<span class='btn btn-default btn-sm ges-quick-gameplay'>")
+                    .attr("data-gameplay", gameplay)
+                    .text(gameplay)
+            );
+            wrap.append(" ");
+        });
+    };
+
     widget.onInit = function () {
         widget.content.append(board);
 
         renderQuickMaps();
         renderQuickConfigs();
+        renderQuickWeaponSets();
+        renderQuickGameplays();
 
         refreshStatus();
         refreshBans();
+        refreshGameplayControls();
 
         widget.content.on("click", ".ges-status-refresh", function () {
             refreshStatus();
+        });
+
+        widget.content.on("click", ".ges-gameplay-refresh", function () {
+            if ($(this).hasClass("disabled")) return;
+
+            refreshGameplayControls();
+        });
+
+        widget.content.on("click", ".ges-gameplay-apply", function () {
+            if ($(this).hasClass("disabled")) return;
+
+            var mode = board.find(".ges-teamplay-mode").val();
+            var label = mode === "automatic" ? "Automatic" : (mode === "on" ? "On" : "Off");
+
+            updateGameplayControl("teamplay", mode, "Teamplay set to " + label);
+        });
+
+        widget.content.on("click", ".ges-gameplay-toggle", function () {
+            var button = $(this);
+
+            if (button.hasClass("disabled")) return;
+
+            var control = button.attr("data-control");
+            var value = button.attr("data-value") === "1" ? 0 : 1;
+            var label = button.attr("data-label");
+
+            updateGameplayControl(control, value, label + " turned " + (value ? "on" : "off"));
+        });
+
+        widget.content.on("click", ".ges-gameplay-timing-apply", function () {
+            if ($(this).hasClass("disabled")) return;
+
+            applyGameplayTiming();
+        });
+
+        widget.content.on("input change", ".ges-gameplay-number-value[data-control='roundCount']", function () {
+            updateRoundTimeState();
         });
 
         widget.content.on("click", ".ges-player-kick", function (ev) {
@@ -442,6 +649,68 @@ Widget.register("rwa-gesourceboard", function (widget) {
             });
         });
 
+        var changeWeaponSet = function (weaponSet) {
+            if (!weaponSet) return;
+
+            Modal.confirm("Change weapon set to " + weaponSet + " and restart the current round?", function (success) {
+                if (success) {
+                    runBackend("weaponSet", { weaponSet: weaponSet }, "Changed weapon set to " + weaponSet);
+                }
+            });
+        };
+
+        widget.content.on("click", ".ges-weaponset-change", function () {
+            var input = board.find(".ges-weaponset-input");
+            var weaponSet = input.val();
+
+            changeWeaponSet(weaponSet);
+        });
+
+        widget.content.on("keyup", ".ges-weaponset-input", function (ev) {
+            if (ev.keyCode === 13) {
+                board.find(".ges-weaponset-change").click();
+            }
+
+            if (ev.keyCode === 27) {
+                this.value = "";
+            }
+        });
+
+        widget.content.on("click", ".ges-quick-weaponset", function () {
+            changeWeaponSet($(this).attr("data-weaponset"));
+        });
+
+        var changeGameplay = function (gameplay) {
+            if (!gameplay) return;
+
+            Modal.confirm("Change gameplay mode to " + gameplay + "? This will restart the current round.", function (success) {
+                if (success) {
+                    runBackend("gameplay", { gameplay: gameplay }, "Changed gameplay mode to " + gameplay);
+                    setTimeout(function () {
+                        refreshGameplayControls();
+                    }, 1000);
+                }
+            });
+        };
+
+        widget.content.on("click", ".ges-gameplay-mode-change", function () {
+            changeGameplay(board.find(".ges-gameplay-mode-input").val());
+        });
+
+        widget.content.on("keyup", ".ges-gameplay-mode-input", function (ev) {
+            if (ev.keyCode === 13) {
+                board.find(".ges-gameplay-mode-change").click();
+            }
+
+            if (ev.keyCode === 27) {
+                this.value = "";
+            }
+        });
+
+        widget.content.on("click", ".ges-quick-gameplay", function () {
+            changeGameplay($(this).attr("data-gameplay"));
+        });
+
         widget.content.on("click", ".ges-config-exec", function () {
             var input = board.find(".ges-config-input");
             var cfg = input.val();
@@ -474,5 +743,7 @@ Widget.register("rwa-gesourceboard", function (widget) {
     widget.onOptionUpdate = function () {
         renderQuickMaps();
         renderQuickConfigs();
+        renderQuickWeaponSets();
+        renderQuickGameplays();
     };
 });

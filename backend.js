@@ -29,7 +29,35 @@ widget.onFrontendMessage = function (server, user, action, messageData, callback
             break;
 
         case "execConfig":
-            widget.runCommand(server, "exec " + cleanToken(messageData.config), callback);
+            widget.runCommand(server, "exec " + cleanToken(messageData.config) + "; ge_endmatch", callback);
+            break;
+
+        case "weaponSet":
+            var weaponSet = cleanToken(messageData.weaponSet);
+
+            if (!weaponSet) {
+                callback(widget, {
+                    ok: false,
+                    error: "Invalid weapon set"
+                });
+                break;
+            }
+
+            widget.runCommand(server, "ge_weaponset " + weaponSet + "; ge_restartround", callback);
+            break;
+
+        case "gameplay":
+            var gameplay = cleanToken(messageData.gameplay);
+
+            if (!gameplay) {
+                callback(widget, {
+                    ok: false,
+                    error: "Invalid gameplay mode"
+                });
+                break;
+            }
+
+            widget.runCommand(server, "ge_gameplay " + gameplay, callback);
             break;
 
         case "kickPlayer":
@@ -46,6 +74,18 @@ widget.onFrontendMessage = function (server, user, action, messageData, callback
 
         case "unbanPlayer":
             widget.unbanPlayer(server, messageData.steamid, callback);
+            break;
+
+        case "gameplayControls":
+            widget.getGameplayControls(server, callback);
+            break;
+
+        case "setGameplayControl":
+            widget.setGameplayControl(server, messageData.control, messageData.value, callback);
+            break;
+
+        case "setGameplayTiming":
+            widget.setGameplayTiming(server, messageData, callback);
             break;
 
         default:
@@ -208,6 +248,200 @@ widget.unbanPlayer = function (server, steamid, callback) {
 };
 
 /**
+ * Get the current values used by the gameplay controls.
+ *
+ * @param {RconServer} server
+ * @param {function} callback
+ */
+widget.getGameplayControls = function (server, callback) {
+    var names = [
+        "ge_teamplay",
+        "ge_autoteam",
+        "ge_autoautoteam",
+        "ge_allowradar",
+        "ge_radar_showenemyteam",
+        "ge_paintball",
+        "ge_allowjump",
+        "ge_startarmed",
+        "mp_timelimit",
+        "ge_roundtime",
+        "ge_roundcount"
+    ];
+    var values = {};
+    var index = 0;
+
+    var queryNext = function (attempt) {
+        attempt = attempt || 1;
+
+        if (index >= names.length) {
+            var automatic = values.ge_autoautoteam === 1 || values.ge_autoteam > 0;
+
+            callback(widget, {
+                ok: true,
+                controls: {
+                    teamplay: automatic ? "automatic" : (values.ge_teamplay === 1 ? "on" : "off"),
+                    radar: values.ge_allowradar === 1,
+                    enemyRadar: values.ge_radar_showenemyteam === 1,
+                    paintball: values.ge_paintball === 1,
+                    jumping: values.ge_allowjump === 1,
+                    startArmed: values.ge_startarmed === 1,
+                    matchTime: values.mp_timelimit,
+                    roundTime: values.ge_roundtime,
+                    roundCount: values.ge_roundcount
+                }
+            });
+            return;
+        }
+
+        var name = names[index];
+
+        server.cmd(name, null, false, function (response) {
+            var value = parseConVarValue(response, name);
+
+            if (value === null) {
+                if (attempt < 2) {
+                    setTimeout(function () {
+                        queryNext(attempt + 1);
+                    }, 200);
+                    return;
+                }
+
+                callback(widget, {
+                    ok: false,
+                    error: "Could not read gameplay control: " + name
+                });
+                return;
+            }
+
+            values[name] = value;
+            index++;
+            queryNext(1);
+        });
+    };
+
+    queryNext(1);
+};
+
+/**
+ * Update one allowlisted gameplay control.
+ *
+ * @param {RconServer} server
+ * @param {string} control
+ * @param {string|number|boolean} value
+ * @param {function} callback
+ */
+widget.setGameplayControl = function (server, control, value, callback) {
+    var command = "";
+    var booleanControls = {
+        radar: "ge_allowradar",
+        enemyRadar: "ge_radar_showenemyteam",
+        paintball: "ge_paintball",
+        jumping: "ge_allowjump",
+        startArmed: "ge_startarmed"
+    };
+    if (control === "teamplay") {
+        if (value === "automatic") {
+            command = "ge_autoautoteam 1";
+        } else if (value === "on" || value === "off") {
+            command = "ge_autoautoteam 0; ge_autoteam 0; ge_teamplay " + (value === "on" ? "1" : "0");
+        }
+    } else if (booleanControls[control]) {
+        if (value === true || value === 1 || value === "1") {
+            command = booleanControls[control] + " 1";
+        } else if (value === false || value === 0 || value === "0") {
+            command = booleanControls[control] + " 0";
+        }
+    }
+
+    if (!command) {
+        callback(widget, {
+            ok: false,
+            error: "Invalid gameplay control"
+        });
+        return;
+    }
+
+    widget.runCommand(server, command, callback);
+};
+
+/**
+ * Apply all match timing values together.
+ * Toggling ge_roundcount through 0 ensures GE:S recalculates round time when
+ * round counting is enabled.
+ *
+ * @param {RconServer} server
+ * @param {object} values
+ * @param {function} callback
+ */
+widget.setGameplayTiming = function (server, values, callback) {
+    var matchTime = cleanUnsignedInteger(values.matchTime);
+    var roundCount = cleanUnsignedInteger(values.roundCount);
+    var roundTime = roundCount === 0 ? cleanUnsignedInteger(values.roundTime) : null;
+
+    if (matchTime === null || roundCount === null || (roundCount === 0 && roundTime === null)) {
+        callback(widget, {
+            ok: false,
+            error: "Timing values must be whole numbers of 0 or greater"
+        });
+        return;
+    }
+
+    var commands = [
+        "mp_timelimit " + matchTime,
+        "ge_roundcount 0"
+    ];
+
+    if (roundCount > 0) {
+        commands.push("ge_roundcount " + roundCount);
+    } else {
+        commands.push("ge_roundtime " + roundTime);
+    }
+
+    var setCurrentRoundTime = function (seconds) {
+        widget.runCommand(server, "ge_setcurrentroundtime " + seconds, callback);
+    };
+
+    widget.runCommand(server, commands.join("; "), function (currentWidget, response) {
+        if (!response || response.error) {
+            callback(currentWidget, response);
+            return;
+        }
+
+        if (roundCount === 0) {
+            setCurrentRoundTime(roundTime);
+            return;
+        }
+
+        var readCalculatedRoundTime = function (attempt) {
+            server.cmd("ge_roundtime", null, false, function (roundTimeResponse) {
+                var calculatedRoundTime = parseConVarValue(roundTimeResponse, "ge_roundtime");
+
+                if (calculatedRoundTime === null && attempt < 3) {
+                    setTimeout(function () {
+                        readCalculatedRoundTime(attempt + 1);
+                    }, 200);
+                    return;
+                }
+
+                if (calculatedRoundTime === null) {
+                    callback(widget, {
+                        ok: false,
+                        error: "Timing was applied, but the calculated round time could not be read"
+                    });
+                    return;
+                }
+
+                setCurrentRoundTime(calculatedRoundTime);
+            });
+        };
+
+        setTimeout(function () {
+            readCalculatedRoundTime(1);
+        }, 200);
+    });
+};
+
+/**
  * Parse Source engine `status` output into useful fields.
  *
  * @param {string} statusData
@@ -343,6 +577,27 @@ function parseBans(bansData) {
 }
 
 /**
+ * Parse the numeric value from a Source ConVar response.
+ * Example: \"ge_allowjump\" = \"0\" ( def. \"1\" )
+ *
+ * @param {string} response
+ * @param {string} name
+ * @return {number|null}
+ */
+function parseConVarValue(response, name) {
+    var pattern = new RegExp("\\\"" + name + "\\\"\\s*=\\s*\\\"([^\\\"]+)\\\"", "i");
+    var match = String(response || "")
+        .replace(/[\x00-\x1F\x7F]/g, "")
+        .match(pattern);
+
+    if (!match) return null;
+
+    var value = parseFloat(match[1]);
+
+    return isNaN(value) ? null : value;
+}
+
+/**
  * Clean map/config tokens.
  * Allows common Source cfg/map filename characters only.
  */
@@ -359,6 +614,17 @@ function cleanNumber(value) {
     return String(value === null || typeof value === "undefined" ? "" : value)
         .trim()
         .replace(/[^0-9]/g, "");
+}
+
+/**
+ * Validate a non-negative whole number used by gameplay timing controls.
+ */
+function cleanUnsignedInteger(value) {
+    var numberValue = String(value === null || typeof value === "undefined" ? "" : value).trim();
+
+    if (!/^\d{1,9}$/.test(numberValue)) return null;
+
+    return parseInt(numberValue, 10);
 }
 
 /**

@@ -19,16 +19,22 @@ Current features include:
 - Server status
 - Live player list
 - Player actions menu (kick, ban, copy SteamID, open Steam profile)
+- Gameplay controls (teamplay, radar, paintball, jumping, starting weapon and match timing)
+- Configurable quick weapon sets
+- Configurable gameplay-mode controls
 - Execute raw RCON commands
 - Quick map switching
 - Quick server preset loading
 - RCON command output
 
+### Gameplay control overrides
+
+Gameplay Controls change the server's current settings, but some gameplay scenarios enforce their own rules and may override them. For example, Man With the Golden Gun uses radar to mark the Golden Gun carrier even when the general Radar setting is off. A map or gameplay change may also reload configuration files and reset a setting.
+
 ## Planned Features
 
 A few things I'd like to add over time:
 
-- Gameplay controls (radar, teamplay, etc.)
 - Better server status information
 - Friendlier server preset names
 - General UI improvements

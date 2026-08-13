@@ -15,6 +15,14 @@
     "quickConfigs": {
       "type": "text",
       "default": "server_n64_classic.cfg,server_normal.cfg,server_dm_only.cfg,server_teamplay.cfg"
+    },
+    "quickWeaponSets": {
+      "type": "text",
+      "default": "assorted_weapons,rockets,throwing_knives,golden_guns,slappers,proximity_mines,explosives"
+    },
+    "quickGameplays": {
+      "type": "text",
+      "default": "arsenal,capturetheflag,deathmatch,drnoarmor,guntrade,livingdaylights,ltk,mwgg,viewtoakill,yolt"
     }
   },
   "locale": {
@@ -33,7 +41,11 @@
       "option.quickMaps.title": "Quick maps",
       "option.quickMaps.info": "Comma-separated map names, without .bsp",
       "option.quickConfigs.title": "Quick server presets",
-      "option.quickConfigs.info": "Comma-separated cfg files used as server presets"
+      "option.quickConfigs.info": "Comma-separated cfg files used as server presets",
+      "option.quickWeaponSets.title": "Quick weapon sets",
+      "option.quickWeaponSets.info": "Comma-separated GE:S weapon-set identities",
+      "option.quickGameplays.title": "Quick gameplay modes",
+      "option.quickGameplays.info": "Comma-separated GE:S gameplay identities"
     }
   }
 }
