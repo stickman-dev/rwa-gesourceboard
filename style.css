@@ -37,6 +37,14 @@
     vertical-align: middle;
 }
 
+.widget-rwa-gesourceboard .ges-ban-table td {
+    vertical-align: middle;
+}
+
+.widget-rwa-gesourceboard .ges-ban-actions {
+    margin-bottom: 10px;
+}
+
 .widget-rwa-gesourceboard .ges-player-actions .dropdown-menu {
     min-width: 170px;
 }

@@ -73,9 +73,20 @@ Widget.register("rwa-gesourceboard", function (widget) {
         menu.append(
             $("<li>").append(
                 $("<a href='#' class='ges-player-ban'>")
-                    .attr("data-userid", player.userid)
+                    .attr("data-steamid", player.steamid)
+                    .attr("data-minutes", "30")
                     .attr("data-name", player.name)
-                    .text("Ban")
+                    .text("Ban for 30 minutes")
+            )
+        );
+
+        menu.append(
+            $("<li>").append(
+                $("<a href='#' class='ges-player-ban'>")
+                    .attr("data-steamid", player.steamid)
+                    .attr("data-minutes", "0")
+                    .attr("data-name", player.name)
+                    .text("Ban permanently")
             )
         );
 
@@ -157,6 +168,64 @@ Widget.register("rwa-gesourceboard", function (widget) {
         });
     };
 
+    var renderBans = function (bans) {
+        var tbody = board.find(".ges-ban-table tbody");
+        tbody.html("");
+
+        if (!bans || !bans.length) {
+            tbody.append(
+                $("<tr>").append(
+                    $("<td colspan='3' class='text-muted'>").text("No banned players.")
+                )
+            );
+            return;
+        }
+
+        bans.forEach(function (ban) {
+            var row = $("<tr>");
+            var duration = ban.duration || "Unknown";
+            var profile = $("<a href='#' class='btn btn-default btn-xs ges-player-steam-profile'>")
+                .attr("data-steamid", ban.steamid)
+                .text("Open Steam Profile");
+            var unban = $("<span class='btn btn-default btn-xs ges-player-unban'>")
+                .attr("data-steamid", ban.steamid)
+                .text("Unban");
+
+            if (ban.permanent) {
+                duration = "Permanent";
+            } else if (typeof ban.minutes === "number" && isFinite(ban.minutes)) {
+                duration = Math.round(ban.minutes) + " min";
+            }
+
+            row.append($("<td>").text(ban.steamid));
+            row.append($("<td>").text(duration));
+            row.append(
+                $("<td>")
+                    .append(profile)
+                    .append(" ")
+                    .append(unban)
+            );
+            tbody.append(row);
+        });
+    };
+
+    var refreshBans = function () {
+        widget.backend("bans", {}, function (response) {
+            if (!response) {
+                writeOutput("No response from ban list request");
+                return;
+            }
+
+            if (response.error) {
+                writeOutput(response.error);
+                note(response.error, "danger");
+                return;
+            }
+
+            renderBans(response.bans || []);
+        });
+    };
+
     var runBackend = function (action, data, successMessage) {
         widget.backend(action, data || {}, function (response) {
             if (!response) {
@@ -223,6 +292,7 @@ Widget.register("rwa-gesourceboard", function (widget) {
         renderQuickConfigs();
 
         refreshStatus();
+        refreshBans();
 
         widget.content.on("click", ".ges-status-refresh", function () {
             refreshStatus();
@@ -251,17 +321,45 @@ Widget.register("rwa-gesourceboard", function (widget) {
             ev.preventDefault();
 
             var button = $(this);
-            var userid = button.attr("data-userid");
+            var steamid = button.attr("data-steamid");
+            var minutes = parseInt(button.attr("data-minutes"), 10);
             var name = button.attr("data-name");
 
-            if (!userid) return;
+            if (!steamid || isNaN(minutes)) return;
 
-            Modal.confirm("Ban " + name + " from the server? This cannot be undone from here.", function (success) {
+            var question = minutes === 0
+                ? "Permanently ban " + name + " from the server?"
+                : "Ban " + name + " for " + minutes + " minutes?";
+
+            Modal.confirm(question, function (success) {
                 if (success) {
-                    runBackend("banPlayer", { userid: userid }, "Banned " + name);
+                    runBackend("banPlayer", {
+                        steamid: steamid,
+                        minutes: minutes
+                    }, "Banned " + name);
                     setTimeout(function () {
                         refreshStatus();
+                        refreshBans();
                     }, 1000);
+                }
+            });
+        });
+
+        widget.content.on("click", ".ges-bans-refresh", function () {
+            refreshBans();
+        });
+
+        widget.content.on("click", ".ges-player-unban", function () {
+            var steamid = $(this).attr("data-steamid");
+
+            if (!steamid) return;
+
+            Modal.confirm("Unban " + steamid + "?", function (success) {
+                if (success) {
+                    runBackend("unbanPlayer", { steamid: steamid }, "Unbanned " + steamid);
+                    setTimeout(function () {
+                        refreshBans();
+                    }, 500);
                 }
             });
         });
