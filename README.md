@@ -31,14 +31,6 @@ Current features include:
 
 Gameplay Controls change the server's current settings, but some gameplay scenarios enforce their own rules and may override them. For example, Man With the Golden Gun uses radar to mark the Golden Gun carrier even when the general Radar setting is off. A map or gameplay change may also reload configuration files and reset a setting.
 
-## Planned Features
-
-A few things I'd like to add over time:
-
-- Better server status information
-- Friendlier server preset names
-- General UI improvements
-
 ## Installation
 
 In RCON Web Admin, add the repository in **Menu → Widgets**:
