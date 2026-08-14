@@ -88,6 +88,22 @@ widget.onFrontendMessage = function (server, user, action, messageData, callback
             widget.setGameplayTiming(server, messageData, callback);
             break;
 
+        case "botControls":
+            widget.getBotControls(server, callback);
+            break;
+
+        case "setBotControls":
+            widget.setBotControls(server, messageData, callback);
+            break;
+
+        case "disableBots":
+            widget.runCommand(server, "ge_bot_threshold 0", callback);
+            break;
+
+        case "removeBots":
+            widget.runCommand(server, "ge_bot_remove", callback);
+            break;
+
         default:
             callback(widget, {
                 ok: false,
@@ -439,6 +455,92 @@ widget.setGameplayTiming = function (server, values, callback) {
             readCalculatedRoundTime(1);
         }, 200);
     });
+};
+
+/**
+ * Get the current values used by the bot controls.
+ *
+ * @param {RconServer} server
+ * @param {function} callback
+ */
+widget.getBotControls = function (server, callback) {
+    var names = [
+        "ge_bot_threshold",
+        "ge_bot_difficulty",
+        "ge_bot_openslots"
+    ];
+    var values = {};
+    var index = 0;
+
+    var queryNext = function (attempt) {
+        attempt = attempt || 1;
+
+        if (index >= names.length) {
+            callback(widget, {
+                ok: true,
+                controls: {
+                    threshold: values.ge_bot_threshold,
+                    difficulty: values.ge_bot_difficulty,
+                    openSlots: values.ge_bot_openslots
+                }
+            });
+            return;
+        }
+
+        var name = names[index];
+
+        server.cmd(name, null, false, function (response) {
+            var value = parseConVarValue(response, name);
+
+            if (value === null) {
+                if (attempt < 2) {
+                    setTimeout(function () {
+                        queryNext(attempt + 1);
+                    }, 200);
+                    return;
+                }
+
+                callback(widget, {
+                    ok: false,
+                    error: "Could not read bot control: " + name
+                });
+                return;
+            }
+
+            values[name] = value;
+            index++;
+            queryNext(1);
+        });
+    };
+
+    queryNext(1);
+};
+
+/**
+ * Apply all bot settings together.
+ *
+ * @param {RconServer} server
+ * @param {object} values
+ * @param {function} callback
+ */
+widget.setBotControls = function (server, values, callback) {
+    var threshold = cleanUnsignedInteger(values.threshold);
+    var difficulty = cleanUnsignedInteger(values.difficulty);
+    var openSlots = cleanUnsignedInteger(values.openSlots);
+
+    if (threshold === null || difficulty === null || difficulty > 9 || openSlots === null) {
+        callback(widget, {
+            ok: false,
+            error: "Bot threshold and open slots must be whole numbers of 0 or greater; difficulty must be 0–9"
+        });
+        return;
+    }
+
+    widget.runCommand(server, [
+        "ge_bot_difficulty " + difficulty,
+        "ge_bot_openslots " + openSlots,
+        "ge_bot_threshold " + threshold
+    ].join("; "), callback);
 };
 
 /**

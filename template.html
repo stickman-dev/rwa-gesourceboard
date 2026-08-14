@@ -184,6 +184,55 @@
         </div>
     </div>
 
+    <h2>Bots</h2>
+
+    <div class="ges-gameplay-panel ges-bots-panel">
+        <p class="text-muted ges-bots-status">Loading bot settings…</p>
+
+        <div class="ges-gameplay-row">
+            <div class="ges-gameplay-label">
+                <strong>Bot threshold</strong>
+                <span class="text-muted">Total players the server maintains using bots; 0 disables automatic bot population.</span>
+            </div>
+            <div class="ges-gameplay-number input-group input-group-sm">
+                <input type="number" min="0" step="1" class="form-control ges-bot-value" data-control="threshold">
+                <span class="input-group-addon">players</span>
+            </div>
+        </div>
+
+        <div class="ges-gameplay-row">
+            <div class="ges-gameplay-label">
+                <strong>Bot difficulty</strong>
+                <span class="text-muted">Average bot difficulty from 0 to 9.</span>
+            </div>
+            <div class="ges-gameplay-number input-group input-group-sm">
+                <input type="number" min="0" max="9" step="1" class="form-control ges-bot-value" data-control="difficulty">
+                <span class="input-group-addon">0–9</span>
+            </div>
+        </div>
+
+        <div class="ges-gameplay-row">
+            <div class="ges-gameplay-label">
+                <strong>Open slots</strong>
+                <span class="text-muted">Player slots reserved for humans joining the server.</span>
+            </div>
+            <div class="ges-gameplay-number input-group input-group-sm">
+                <input type="number" min="0" step="1" class="form-control ges-bot-value" data-control="openSlots">
+                <span class="input-group-addon">slots</span>
+            </div>
+        </div>
+
+        <div class="ges-gameplay-actions">
+            <button type="button" class="btn btn-primary btn-sm ges-bots-apply">Apply Bot Settings</button>
+            <button type="button" class="btn btn-default btn-sm ges-bots-disable">Disable Bots</button>
+            <button type="button" class="btn btn-danger btn-sm ges-bots-remove">Remove All Bots</button>
+            <button type="button" class="btn btn-default btn-sm ges-bots-refresh">
+                <span class="glyphicon glyphicon-refresh"></span>
+                Refresh Bots
+            </button>
+        </div>
+    </div>
+
     <h2 data-translate="maps.title"></h2>
 
     <p class="text-muted">Run <code>maps *</code> in RCON to list all installed maps.</p>

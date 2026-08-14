@@ -24,6 +24,7 @@ Current features include:
 - Live player list
 - Player actions menu (kick, ban, copy SteamID, open Steam profile)
 - Gameplay controls (teamplay, radar, paintball, jumping, starting weapon and match timing)
+- Bot controls (population threshold, difficulty, reserved human slots and removal)
 - Configurable quick weapon sets
 - Configurable gameplay-mode controls
 - Execute raw RCON commands

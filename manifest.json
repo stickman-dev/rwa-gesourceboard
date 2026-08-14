@@ -1,7 +1,7 @@
 {
   "id": "rwa-gesourceboard",
   "repository": "stickman-dev/rwa-gesourceboard",
-  "version": "0.2.0",
+  "version": "0.3.0",
   "compatibleGames": "all",
   "compatibleSizes": [
     "large",

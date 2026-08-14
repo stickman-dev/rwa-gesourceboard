@@ -68,6 +68,10 @@
     padding: 8px 12px;
 }
 
+.widget-rwa-gesourceboard .ges-bots-status {
+    margin-bottom: 2px;
+}
+
 .widget-rwa-gesourceboard .ges-gameplay-toggle {
     min-width: 54px;
 }

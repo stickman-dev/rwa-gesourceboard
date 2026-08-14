@@ -365,6 +365,87 @@ Widget.register("rwa-gesourceboard", function (widget) {
         });
     };
 
+    var setBotControlsLoading = function (loading) {
+        board.find(".ges-bots-apply, .ges-bots-disable, .ges-bots-remove, .ges-bots-refresh")
+            .toggleClass("disabled", loading)
+            .prop("disabled", loading);
+        board.find(".ges-bot-value").prop("disabled", loading);
+    };
+
+    var renderBotControls = function (controls) {
+        controls = controls || {};
+
+        board.find(".ges-bot-value").each(function () {
+            var input = $(this);
+            var value = controls[input.attr("data-control")];
+
+            input.val(typeof value === "number" ? value : "");
+        });
+
+        board.find(".ges-bots-status").text(
+            controls.threshold === 0
+                ? "Automatic bot population is disabled."
+                : "Server will maintain up to " + controls.threshold + " total players using bots."
+        );
+    };
+
+    var refreshBotControls = function () {
+        setBotControlsLoading(true);
+
+        widget.backend("botControls", {}, function (response) {
+            setBotControlsLoading(false);
+
+            if (!response) {
+                writeOutput("No response from bot controls request");
+                return;
+            }
+
+            if (response.error) {
+                writeOutput(response.error);
+                note(response.error, "danger");
+                return;
+            }
+
+            renderBotControls(response.controls);
+        });
+    };
+
+    var applyBotControls = function () {
+        var controls = {
+            threshold: board.find(".ges-bot-value[data-control='threshold']").val().trim(),
+            difficulty: board.find(".ges-bot-value[data-control='difficulty']").val().trim(),
+            openSlots: board.find(".ges-bot-value[data-control='openSlots']").val().trim()
+        };
+        var valid = /^\d+$/.test(controls.threshold)
+            && /^\d+$/.test(controls.difficulty)
+            && parseInt(controls.difficulty, 10) <= 9
+            && /^\d+$/.test(controls.openSlots);
+
+        if (!valid) {
+            note("Bot threshold and open slots must be whole numbers of 0 or greater; difficulty must be 0–9", "danger");
+            return;
+        }
+
+        setBotControlsLoading(true);
+
+        widget.backend("setBotControls", controls, function (response) {
+            if (!response || response.error) {
+                setBotControlsLoading(false);
+                var error = response && response.error ? response.error : "No response";
+
+                writeOutput(error);
+                note(error, "danger");
+                return;
+            }
+
+            note("Bot settings applied", "success");
+
+            setTimeout(function () {
+                refreshBotControls();
+            }, 300);
+        });
+    };
+
     var runBackend = function (action, data, successMessage) {
         widget.backend(action, data || {}, function (response) {
             if (!response) {
@@ -463,6 +544,7 @@ Widget.register("rwa-gesourceboard", function (widget) {
         refreshStatus();
         refreshBans();
         refreshGameplayControls();
+        refreshBotControls();
 
         widget.content.on("click", ".ges-status-refresh", function () {
             refreshStatus();
@@ -503,6 +585,49 @@ Widget.register("rwa-gesourceboard", function (widget) {
 
         widget.content.on("input change", ".ges-gameplay-number-value[data-control='roundCount']", function () {
             updateRoundTimeState();
+        });
+
+        widget.content.on("click", ".ges-bots-refresh", function () {
+            if ($(this).hasClass("disabled")) return;
+
+            refreshBotControls();
+        });
+
+        widget.content.on("click", ".ges-bots-apply", function () {
+            if ($(this).hasClass("disabled")) return;
+
+            applyBotControls();
+        });
+
+        widget.content.on("click", ".ges-bots-disable", function () {
+            if ($(this).hasClass("disabled")) return;
+
+            setBotControlsLoading(true);
+            widget.backend("disableBots", {}, function (response) {
+                if (!response || response.error) {
+                    setBotControlsLoading(false);
+                    var error = response && response.error ? response.error : "No response";
+
+                    writeOutput(error);
+                    note(error, "danger");
+                    return;
+                }
+
+                note("Automatic bot population disabled", "success");
+                setTimeout(function () {
+                    refreshBotControls();
+                }, 300);
+            });
+        });
+
+        widget.content.on("click", ".ges-bots-remove", function () {
+            if ($(this).hasClass("disabled")) return;
+
+            Modal.confirm("Remove all bots from the server?", function (success) {
+                if (success) {
+                    runBackend("removeBots", {}, "Removed all bots");
+                }
+            });
         });
 
         widget.content.on("click", ".ges-player-kick", function (ev) {
