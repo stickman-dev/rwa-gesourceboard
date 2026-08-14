@@ -72,6 +72,10 @@
     margin-bottom: 2px;
 }
 
+.widget-rwa-gesourceboard .ges-bots-note {
+    margin-bottom: 10px;
+}
+
 .widget-rwa-gesourceboard .ges-gameplay-toggle {
     min-width: 54px;
 }
