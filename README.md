@@ -1,3 +1,7 @@
+> [!WARNING]
+> **This project is archived and no longer maintained.**
+> I now prefer GE32 for playing GoldenEye online, so I have no plans to work on GE:Sourceboard any further. It may stop working with future versions of RCON Web Admin or GoldenEye: Source if someone picks up the development of those again, but for now this should continue working for the foreseeable future. Feel free to fork it if you'd like to continue development.
+
 # GE:Sourceboard
 
 GE:Sourceboard is a custom widget for RCON Web Admin that adds some quality-of-life controls for administering GoldenEye: Source dedicated servers.
